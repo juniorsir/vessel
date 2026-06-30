@@ -1,0 +1,29 @@
+name: Compile and Release Vessel
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on version tags e.g., git tag v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Build Release Binary
+        run: cargo build --release
+        
+      - name: Strip Binary
+        run: strip target/release/vessel-cli
+        
+      - name: Rename for Release
+        run: mv target/release/vessel-cli vessel-linux-amd64
+        
+      - name: Release to GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          files: vessel-linux-amd64
