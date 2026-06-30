@@ -1,0 +1,11 @@
+# Rust
+target/
+Cargo.lock
+
+# Node
+node_modules/
+bin/vessel-native
+
+# OS / Env
+.DS_Store
+.env

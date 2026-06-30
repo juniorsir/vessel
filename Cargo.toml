@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "nova-cli",
+    "nova-core",
+    "nova-runtime"
+]
+resolver = "2"

@@ -1,0 +1,18 @@
+[package]
+name = "nova-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nova-runtime = { path = "../nova-runtime" }
+nova-builder = { path = "../builder" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+hex = "0.4"
+crossterm = "0.29"
+
+# Explicitly register all required systems dependencies for local mode compiling
+rayon = "1.12"
+libc = "0.2"
+nix = { version = "0.31", features = ["sched", "mount", "user", "fs"] }
