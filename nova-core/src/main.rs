@@ -1,22 +1,28 @@
-use tokio::net::TcpListener;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use nova_core::config::Patra;
+use nova_core::engine::Engine;
+use std::env;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("\x1b[1m\x1b[36m[novad]\x1b[0m Booting Systems Orchestrator...");
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    
+    let config_path = if args.len() > 1 {
+        &args[1]
+    } else {
+        "patra.yaml"
+    };
 
-    // The standard TCP Sandbox Listener Thread
-    let exec_listener = TcpListener::bind("127.0.0.1:9000").await?;
-    println!("\x1b[1m\x1b[32m[novad-exec]\x1b[0m TCP Execution Engine listening on 127.0.0.1:9000");
+    println!("[Nova Core] Loading configuration from '{}'...", config_path);
+    let patra = match Patra::load(config_path) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("[Error] {}", e);
+            std::process::exit(1);
+        }
+    };
 
-    loop {
-        let (mut socket, addr) = exec_listener.accept().await?;
-        println!("[novad-exec] Connection received from: {}", addr);
-        
-        tokio::spawn(async move {
-            let mut buffer = [0u8; 4096];
-            let _ = socket.read(&mut buffer).await;
-            let _ = socket.write_all(b"Connected to novad execution engine cleanly!\n").await;
-        });
+    let engine = Engine::new(patra);
+    if let Err(e) = engine.launch() {
+        eprintln!("[Fatal Error] {}", e);
+        std::process::exit(1);
     }
 }

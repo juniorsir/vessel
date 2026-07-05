@@ -518,7 +518,7 @@ thiserror = "1.0"
 zstd = "0.12"
 aes-gcm = "0.10"
 aead = "0.5"
-blake3 = "1.3"
+blake3 = "1.5"
 rand = "0.8"
 
 
@@ -1225,6 +1225,8 @@ pub mod __private228 {
 ===== ./nova-cli/src/main.rs =====
 #![allow(dead_code, unused_imports, unused_variables, unused_mut)]
 
+pub mod termux;
+
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -1358,8 +1360,6 @@ fn compile_natural_language_intent(prompt: &str) -> Result<PatraConfig, Box<dyn 
     let lower_prompt = prompt.to_lowercase();
     let mut paryavaran = HashMap::new();
 
-    paryavaran.insert("PS1".to_string(), "\n\x1b[1m\x1b[32mvessel-sandbox ❯ \x1b[0m".to_string());
-
     if let Ok(term_val) = std::env::var("TERM") {
         paryavaran.insert("TERM".to_string(), term_val);
     } else {
@@ -1367,11 +1367,11 @@ fn compile_natural_language_intent(prompt: &str) -> Result<PatraConfig, Box<dyn 
     }
 
     let mool = if lower_prompt.contains("ubuntu") {
-        "/var/lib/vessel/bases/ubuntu-rootfs".to_string()
+        format!("{}/bases/ubuntu-rootfs", crate::termux::get_base_dir())
     } else if lower_prompt.contains("alpine") {
-        "/var/lib/vessel/bases/alpine-rootfs".to_string()
+        format!("{}/bases/alpine-rootfs", crate::termux::get_base_dir())
     } else {
-        "/var/lib/vessel/bases/alpine-rootfs".to_string()
+        format!("{}/bases/alpine-rootfs", crate::termux::get_base_dir())
     };
 
     let mut karya = vec!["/bin/sh".to_string()]; 
@@ -1422,7 +1422,7 @@ fn compile_natural_language_intent(prompt: &str) -> Result<PatraConfig, Box<dyn 
         sanchay: Vec::new(),
         sadasya: None,
         sanket: vec!["1.1.1.1".to_string(), "8.8.8.8".to_string()],
-        sangjna: Some("vessel-node".to_string()),
+        sangjna: Some("god-mode-node".to_string()),
         suraksha: None,
         tejas: None,
         kavach: None,
@@ -1437,7 +1437,7 @@ fn compile_natural_language_intent(prompt: &str) -> Result<PatraConfig, Box<dyn 
 }
 
 async fn run_sanchay_compile(target_dir: &str) -> Result<(u64, u64), Box<dyn std::error::Error>> {
-    let registry_path = PathBuf::from("/tmp/nova-registry/chunks");
+    let registry_path = PathBuf::from(format!("{}/nova-registry/chunks", crate::termux::get_tmp_dir()));
     fs::create_dir_all(&registry_path)?;
 
     let mut files_to_process = Vec::new();
@@ -1576,8 +1576,8 @@ fn prompt_user_config() -> Result<PatraConfig, Box<dyn std::error::Error>> {
     if mool.is_empty() { mool = "ubuntu".to_string(); }
     
     let resolved_mool = match mool.as_str() {
-        "ubuntu" => "/var/lib/vessel/bases/ubuntu-rootfs".to_string(),
-        "alpine" => "/var/lib/vessel/bases/alpine-rootfs".to_string(),
+        "ubuntu" => format!("{}/bases/ubuntu-rootfs", crate::termux::get_base_dir()),
+        "alpine" => format!("{}/bases/alpine-rootfs", crate::termux::get_base_dir()),
         _ => mool,
     };
 
@@ -1589,20 +1589,20 @@ fn prompt_user_config() -> Result<PatraConfig, Box<dyn std::error::Error>> {
     if karya.is_empty() { karya = "/bin/bash".to_string(); }
 
     let mut smriti_input = String::new();
-    print!("  \x1b[1mMemory Limit (Smriti) [default: 512MB]:\x1b[0m ");
+    print!("  \x1b[1mMemory Limit (Smriti) [default: 2GB]:\x1b[0m ");
     let _ = stdout().flush();
     let _ = stdin().read_line(&mut smriti_input);
     let mut smriti_str = smriti_input.trim().to_string();
-    if smriti_str.is_empty() { smriti_str = "512MB".to_string(); }
+    if smriti_str.is_empty() { smriti_str = "2GB".to_string(); }
     let smriti = parse_size_to_bytes(&smriti_str);
 
     let mut shakti_input = String::new();
-    print!("  \x1b[1mCPU Core Allocation (Shakti) [default: 1.0]:\x1b[0m ");
+    print!("  \x1b[1mCPU Core Allocation (Shakti) [default: 2.0]:\x1b[0m ");
     let _ = stdout().flush();
     let _ = stdin().read_line(&mut shakti_input);
     let mut shakti_str = shakti_input.trim().to_string();
-    if shakti_str.is_empty() { shakti_str = "1.0".to_string(); }
-    let shakti = shakti_str.parse::<f32>().unwrap_or(1.0);
+    if shakti_str.is_empty() { shakti_str = "2.0".to_string(); }
+    let shakti = shakti_str.parse::<f32>().unwrap_or(2.0);
 
     let mut suraksha_input = String::new();
     print!("  \x1b[1mSecurity Policy (Suraksha) [default: ephemeral]:\x1b[0m ");
@@ -1612,7 +1612,6 @@ fn prompt_user_config() -> Result<PatraConfig, Box<dyn std::error::Error>> {
     if suraksha_str.is_empty() { suraksha_str = "ephemeral".to_string(); }
 
     let mut paryavaran = HashMap::new();
-    paryavaran.insert("PS1".to_string(), "\n\x1b[1m\x1b[32mvessel-sandbox ❯ \x1b[0m".to_string());
     if let Ok(term_val) = std::env::var("TERM") { paryavaran.insert("TERM".to_string(), term_val); }
 
     Ok(PatraConfig {
@@ -1623,9 +1622,9 @@ fn prompt_user_config() -> Result<PatraConfig, Box<dyn std::error::Error>> {
         paryavaran,
         dwar: Vec::new(),
         sanchay: Vec::new(),
-        sadasya: None,
+        sadasya: Some("sir".to_string()),
         sanket: vec!["1.1.1.1".to_string(), "8.8.8.8".to_string()],
-        sangjna: Some("vessel-node".to_string()),
+        sangjna: Some("god-mode-node".to_string()),
         suraksha: Some(suraksha_str),
         tejas: None,
         kavach: None,
@@ -1635,7 +1634,7 @@ fn prompt_user_config() -> Result<PatraConfig, Box<dyn std::error::Error>> {
         gati: None,
         bhaar: None,
         adhikar: None,
-        sthapana: None,
+        sthapana: Some("sudo curl wget nano htop git neofetch".to_string()),
     })
 }
 
@@ -1803,8 +1802,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("\x1b[1m\x1b[36m  V E S S E L   R E G I S T R Y   I N V E N T O R Y   (सूची)\x1b[0m");
         println!("\x1b[90m  ──────────────────────────────────────────────────────────────────────────────\x1b[0m\n");
 
-        let alpine_installed = Path::new("/var/lib/vessel/bases/alpine-rootfs").exists();
-        let ubuntu_installed = Path::new("/var/lib/vessel/bases/ubuntu-rootfs").exists();
+        let alpine_installed = Path::new(&format!("{}/bases/alpine-rootfs", crate::termux::get_base_dir())).exists();
+        let ubuntu_installed = Path::new(&format!("{}/bases/ubuntu-rootfs", crate::termux::get_base_dir())).exists();
 
         println!("  \x1b[1m\x1b[32mOFFICIAL UPSTREAM IMAGES\x1b[0m");
         println!("    \x1b[1m\x1b[90m{:<28} {:<18} {}\x1b[0m", "IMAGE NAME", "STATUS", "DESCRIPTION");
@@ -1858,7 +1857,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if name.contains("rootfs") || name.contains("vessel") {
                             found_custom = true;
                             let repo_tag = format!("juniorsir/{}", name);
-                            let is_installed = Path::new(&format!("/var/lib/vessel/bases/{}-rootfs", name)).exists();
+                            let is_installed = Path::new(&format!("{}/bases/{}-rootfs", crate::termux::get_base_dir(), name)).exists();
 
                             println!("    \x1b[1m{:<28}\x1b[0m {:<18} {}", repo_tag, 
                                 if is_installed { "\x1b[1m\x1b[32mInstalled\x1b[0m" } else { "\x1b[90mNot Installed\x1b[0m" },
@@ -1871,7 +1870,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         if !found_custom {
-            let my_ubuntu_installed = Path::new("/var/lib/vessel/bases/my-ubuntu-node-rootfs").exists();
+            let my_ubuntu_installed = Path::new(&format!("{}/bases/my-ubuntu-node-rootfs", crate::termux::get_base_dir())).exists();
             println!("    \x1b[1m{:<28}\x1b[0m {:<18} {}", "juniorsir/my-ubuntu-node", 
                 if my_ubuntu_installed { "\x1b[1m\x1b[32mInstalled\x1b[0m" } else { "\x1b[90mNot Installed\x1b[0m" },
                 "Advanced secure python-node workspace with tools");
@@ -1889,7 +1888,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if args.len() == 3 && (args[1] == "nishkaas" || args[1] == "remove" || args[1] == "delete" || args[1] == "rm") {
-        if !nix::unistd::geteuid().is_root() {
+        if !crate::termux::is_termux() && !nix::unistd::geteuid().is_root() {
             println!("\x1b[1m\x1b[31m[vessel rm] Error: Root privileges required. Please run this command as: sudo vessel rm {}\x1b[0m", args[2]);
             std::process::exit(1);
         }
@@ -1898,9 +1897,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let rootfs_dir = if distro.contains('/') {
             let parts: Vec<&str> = distro.split('/').collect();
             let repo = parts[1];
-            format!("/var/lib/vessel/bases/{}-rootfs", repo)
+            format!("{}/bases/{}-rootfs", crate::termux::get_base_dir(), repo)
         } else {
-            format!("/var/lib/vessel/bases/{}-rootfs", distro)
+            format!("{}/bases/{}-rootfs", crate::termux::get_base_dir(), distro)
         };
 
         let path = PathBuf::from(&rootfs_dir);
@@ -1919,7 +1918,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if args.len() == 3 && (args[1] == "prapt" || args[1] == "pull") {
-        if !nix::unistd::geteuid().is_root() {
+        if !crate::termux::is_termux() && !nix::unistd::geteuid().is_root() {
             println!("\x1b[1m\x1b[31m[vessel prapt] Error: Root privileges required. Please run this command as: sudo vessel prapt {}\x1b[0m", args[2]);
             std::process::exit(1);
         }
@@ -1931,17 +1930,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let username = parts[0];
             let repo = parts[1];
             let download_url = format!("https://github.com/{}/{}/releases/latest/download/rootfs.tar.gz", username, repo);
-            let target_dir = format!("/var/lib/vessel/bases/{}-rootfs", repo);
+            let target_dir = format!("{}/bases/{}-rootfs", crate::termux::get_base_dir(), repo);
             (download_url, target_dir)
         } else {
             match distro.as_str() {
                 "alpine" => (
                     "https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.1-x86_64.tar.gz".to_string(),
-                    "/var/lib/vessel/bases/alpine-rootfs".to_string()
+                    format!("{}/bases/alpine-rootfs", crate::termux::get_base_dir())
                 ),
                 "ubuntu" => (
                     "https://partner-images.canonical.com/core/jammy/current/ubuntu-jammy-core-cloudimg-amd64-root.tar.gz".to_string(),
-                    "/var/lib/vessel/bases/ubuntu-rootfs".to_string()
+                    format!("{}/bases/ubuntu-rootfs", crate::termux::get_base_dir())
                 ),
                 _ => {
                     println!("\x1b[31m[vessel prapt] Error: Unsupported distribution '{}'. Supported: [alpine, ubuntu, or github_username/repo_name]\x1b[0m", distro);
@@ -1958,18 +1957,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("\x1b[1m\x1b[36m[vessel prapt]\x1b[0m Retrieving remote Pratibimb (reflection) for '{}'...", distro);
 
-        let temp_tar = "/tmp/nova-download.tar.gz";
+        let temp_tar = format!("{}/nova-download.tar.gz", crate::termux::get_tmp_dir());
         fs::create_dir_all(&rootfs_dir)?;
 
         show_spinner("  [1/4] Downloading minimal OS base over network...", 1200).await;
-        let _ = Command::new("curl").args(["-L", "-o", temp_tar, &url]).status()?;
+        let _ = Command::new("curl").args(["-L", "-o", &temp_tar, &url]).status()?;
 
         show_spinner("  [2/4] Unpacking base files into secure system vault...", 800).await;
-        let _ = Command::new("tar").args(["-xpf", temp_tar, "-C", &rootfs_dir]).status()?;
-        let _ = fs::remove_file(temp_tar);
+        let _ = Command::new("tar").args(["-xpf", &temp_tar, "-C", &rootfs_dir]).status()?;
+        let _ = fs::remove_file(&temp_tar);
 
         show_spinner("  [3/4] Resetting directory system permissions...", 400).await;
-        let _ = Command::new("chown").args(["-R", "root:root", &rootfs_dir]).status()?;
+        if !crate::termux::is_termux() {
+            let _ = Command::new("chown").args(["-R", "root:root", &rootfs_dir]).status()?;
+        }
 
         show_spinner("  [4/4] Compiling image structure to deduplicated NCI registry...", 1500).await;
         let (total_chunks, saved_bytes) = run_sanchay_compile(&rootfs_dir).await?;
@@ -1979,30 +1980,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let patra_path = Path::new("Patra");
         if !patra_path.exists() {
+            // ADVANCED GOD-MODE PATRA GENERATION
             let default_patra = format!(
 "Mool: \"{}\"
 Karya: \"/bin/bash\"
 
-Smriti: 1GB
-Shakti: 1.0
+Smriti: 2GB
+Shakti: 2.0
 
-# Sthapana dynamically installs packages into memory before unprivileged shell boot
-Sthapana: \"sudo curl wget nano\"
+# Advanced Environment & True-Color Terminals
+Paryavaran:
+  - TERM: \"xterm-256color\"
+  - COLORTERM: \"truecolor\"
+  - FORCE_COLOR: \"1\"
 
-# Sadasya: sir                   # Uncomment to run as unprivileged user 'sir'
+# Pre-Install essential hacking/dev tools automatically
+Sthapana: \"sudo curl wget nano htop neofetch git build-essential\"
+
+Sadasya: sir                   # Run as unprivileged user 'sir' with sudo access
 Sanket: 1.1.1.1 8.8.4.4
-Sangjna: vessel-node
+Sangjna: god-mode-node         # Elegant Hostname
 Suraksha: ephemeral              # Enabled writeable copy-on-write overlay
 
-# Dwar: \"8080:80\"                # Port Forwarding
-# Gati: \"10mbit\"                 # Bandwidth Throttling
-# Bhaar: \"50MB\"                  # Disk I/O Throttling
+# Advanced Host Integrations (Uncomment to use)
+# Dwar: \"8080:80 3000:3000\"      # Port Forwarding
+# Sanchay: \"/data/data/com.termux/files/home:/host_home\" # Map Termux home to sandbox
+# Gati: \"100mbit\"                # Bandwidth Throttling
 # Kendra: \"0,1\"                  # CPU Core Pinning
 ", rootfs_dir);
             if let Ok(mut f) = File::create(patra_path) {
                 let _ = f.write_all(default_patra.as_bytes());
-                println!("\n\x1b[1m\x1b[36m[vessel prapt]\x1b[0m A new 'Patra' manifest file was auto-generated in your current directory.");
-                println!("You can safely run \x1b[1m`sudo vessel`\x1b[0m right now to enter your new sandbox environment!\n");
+                println!("\n\x1b[1m\x1b[36m[vessel prapt]\x1b[0m An advanced 'Patra' manifest file was auto-generated in your current directory.");
+                println!("You can safely run \x1b[1m`sudo vessel`\x1b[0m (or just `vessel` in Termux) right now to enter your new sandbox environment!\n");
             }
         }
         return Ok(());
@@ -2019,7 +2028,7 @@ Suraksha: ephemeral              # Enabled writeable copy-on-write overlay
 
     if args.len() == 1 || (args.len() >= 2 && (args[1] == "direct" || args[1] == "local" || args[1] == "run")) {
         
-        if !nix::unistd::geteuid().is_root() {
+        if !crate::termux::is_termux() && !nix::unistd::geteuid().is_root() {
             println!("\x1b[1m\x1b[31m[vessel] Error: Root privileges required to construct sandbox namespaces.\x1b[0m");
             println!("        Please execute this command as: \x1b[1msudo vessel\x1b[0m\n");
             std::process::exit(1);
@@ -2095,10 +2104,113 @@ Suraksha: ephemeral              # Enabled writeable copy-on-write overlay
             println!("    └── Suraksha (Security Policy): \x1b[32mStandard Sandbox\x1b[0m\n");
         }
 
-        show_spinner("  [2/4] Resolving virtual storage layers & device mounts...", 800).await;
-        
+        // =========================================================================
+        // FILE INJECTIONS (Must happen for BOTH PRoot Termux and Native Linux)
+        // Resolves .bashrc coloring, aliases, user accounts and Sudo access.
+        // =========================================================================
         let sandbox_id = format!("vessel-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
         let mut rootfs_path = PathBuf::from(&config.mool);
+
+        // 1. Inject God-Mode Colors & Aliases
+        let bashrc_path = rootfs_path.join("etc/bash.bashrc");
+        let _ = fs::create_dir_all(rootfs_path.join("etc"));
+        if let Ok(content) = fs::read_to_string(&bashrc_path).or_else(|_| Ok::<String, ()>("".to_string())) {
+            if !content.contains("god-mode") {
+                if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(&bashrc_path) {
+                    let wrapper_code = "
+# [god-mode] Terminal Colors & Advanced Aliases
+export TERM=xterm-256color
+export COLORTERM=truecolor
+export FORCE_COLOR=1
+alias ls='ls --color=auto'
+alias ll='ls -la --color=auto'
+alias grep='grep --color=auto'
+alias ip='ip -color=auto'
+PS1='\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '
+
+# [vessel-security] Automatic Package Manager Warning Wrapper
+apt() {
+    if [ \"$EUID\" -ne 0 ]; then
+        echo -e \"\\x1b[1m\\x1b[31m[vessel-security]\\x1b[0m Permission Denied: Please run using 'sudo apt'.\"
+        return 1
+    fi
+    command apt \"$@\"
+}
+apt-get() {
+    if [ \"$EUID\" -ne 0 ]; then
+        echo -e \"\\x1b[1m\\x1b[31m[vessel-security]\\x1b[0m Permission Denied: Please run using 'sudo apt-get'.\"
+        return 1
+    fi
+    command apt-get \"$@\"
+}
+";
+                    let _ = writeln!(file, "{}", wrapper_code);
+                }
+            }
+        }
+
+        // 2. Resolve Users and setup Sudoers cleanly
+        if let Some(ref user_name) = config.sadasya {
+            let passwd_path = rootfs_path.join("etc/passwd");
+            let group_path = rootfs_path.join("etc/group");
+            let sudoers_dir = rootfs_path.join("etc/sudoers.d");
+
+            let uid = 1000;
+            let username = if user_name.parse::<u32>().is_ok() {
+                "vessel-user".to_string()
+            } else {
+                user_name.clone()
+            };
+
+            if passwd_path.exists() {
+                if let Ok(content) = fs::read_to_string(&passwd_path) {
+                    if !content.contains(&username) && !content.contains(":1000:") {
+                        if let Ok(mut file) = fs::OpenOptions::new().append(true).open(&passwd_path) {
+                            let _ = writeln!(file, "{}:x:{}:{}:Vessel User:/home/{}:/bin/bash", username, uid, uid, username);
+                        }
+                    }
+                }
+                let user_home = rootfs_path.join(format!("home/{}", username));
+                let _ = fs::create_dir_all(&user_home);
+                if !crate::termux::is_termux() {
+                    let _ = Command::new("chown").args(["-R", "1000:1000", user_home.to_str().unwrap()]).status();
+                }
+            }
+
+            if group_path.exists() {
+                if let Ok(content) = fs::read_to_string(&group_path) {
+                    if !content.contains(&username) && !content.contains(":1000:") {
+                        if let Ok(mut file) = fs::OpenOptions::new().append(true).open(&group_path) {
+                            let _ = writeln!(file, "{}:x:{}:", username, uid);
+                        }
+                    }
+                }
+            }
+
+            // Sudoers specific injection for the unprivileged user
+            let _ = fs::create_dir_all(&sudoers_dir);
+            let user_sudo_path = sudoers_dir.join(&username);
+            if let Ok(mut f) = fs::File::create(&user_sudo_path) {
+                let _ = writeln!(f, "{} ALL=(ALL) NOPASSWD:ALL", username);
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let _ = fs::set_permissions(&user_sudo_path, fs::Permissions::from_mode(0o440));
+                }
+            }
+        }
+        // =========================================================================
+
+        // -------------------------------------------------------------
+        // TERMUX SMART ROUTING
+        // Intercepts flow if unprivileged user-space emulation is required
+        // -------------------------------------------------------------
+        if crate::termux::is_termux() {
+            crate::termux::run_direct(config).await?;
+            return Ok(());
+        }
+
+        show_spinner("  [2/4] Resolving virtual storage layers & device mounts...", 800).await;
 
         let mut overlay_root = None;
         if let Some(ref sec) = config.suraksha {
@@ -2141,81 +2253,6 @@ Suraksha: ephemeral              # Enabled writeable copy-on-write overlay
                             let _ = writeln!(file, "127.0.0.1\t{}", hostname);
                         }
                     }
-                }
-            }
-        }
-
-        let bashrc_path = rootfs_path.join("etc/bash.bashrc");
-        if bashrc_path.exists() {
-            if let Ok(content) = fs::read_to_string(&bashrc_path) {
-                if !content.contains("vessel-security") {
-                    if let Ok(mut file) = fs::OpenOptions::new().append(true).open(&bashrc_path) {
-                        let wrapper_code = "
-# [vessel-security] Automatic wrapper to intercept unprivileged package installations cleanly
-apt() {
-    if [ \"$EUID\" -ne 0 ]; then
-        echo -e \"\\x1b[1m\\x1b[31m[vessel-security]\\x1b[0m Permission Denied: Please run this command using 'sudo apt'.\"
-        return 1
-    fi
-    command apt \"$@\"
-}
-apt-get() {
-    if [ \"$EUID\" -ne 0 ]; then
-        echo -e \"\\x1b[1m\\x1b[31m[vessel-security]\\x1b[0m Permission Denied: Please run this command using 'sudo apt-get'.\"
-        return 1
-    fi
-    command apt-get \"$@\"
-}
-";
-                        let _ = writeln!(file, "{}", wrapper_code);
-                    }
-                }
-            }
-        }
-
-        if let Some(ref user_name) = config.sadasya {
-            let passwd_path = rootfs_path.join("etc/passwd");
-            let group_path = rootfs_path.join("etc/group");
-            let sudoers_dir = rootfs_path.join("etc/sudoers.d");
-
-            let uid = 1000;
-            let username = if user_name.parse::<u32>().is_ok() {
-                "vessel-user".to_string()
-            } else {
-                user_name.clone()
-            };
-
-            if passwd_path.exists() {
-                if let Ok(content) = fs::read_to_string(&passwd_path) {
-                    if !content.contains(&username) && !content.contains(":1000:") {
-                        if let Ok(mut file) = fs::OpenOptions::new().append(true).open(&passwd_path) {
-                            let _ = writeln!(file, "{}:x:{}:{}:Vessel User:/home/{}:/bin/bash", username, uid, uid, username);
-                        }
-                    }
-                }
-                let user_home = rootfs_path.join(format!("home/{}", username));
-                let _ = fs::create_dir_all(&user_home);
-                let _ = Command::new("chown").args(["-R", "1000:1000", user_home.to_str().unwrap()]).status();
-            }
-
-            if group_path.exists() {
-                if let Ok(content) = fs::read_to_string(&group_path) {
-                    if !content.contains(&username) && !content.contains(":1000:") {
-                        if let Ok(mut file) = fs::OpenOptions::new().append(true).open(&group_path) {
-                            let _ = writeln!(file, "{}:x:{}:", username, uid);
-                        }
-                    }
-                }
-            }
-
-            let _ = fs::create_dir_all(&sudoers_dir);
-            let user_sudo_path = sudoers_dir.join(&username);
-            if let Ok(mut f) = fs::File::create(&user_sudo_path) {
-                let _ = writeln!(f, "{} ALL=(ALL) NOPASSWD:ALL", username);
-                #[cfg(unix)]
-                {
-                    use std::os::unix::fs::PermissionsExt;
-                    let _ = fs::set_permissions(&user_sudo_path, fs::Permissions::from_mode(0o440));
                 }
             }
         }
@@ -2364,7 +2401,6 @@ apt-get() {
                 println!("\x1b[1m\x1b[32m✔  [4/4] Dynamic hand-off completed. Spawning safe local terminal...\x1b[0m\n");
 
                 let resolv_path = rootfs_path.join("etc/resolv.conf");
-                let _ = fs::create_dir_all(rootfs_path.join("etc"));
                 if let Ok(mut f) = fs::File::create(&resolv_path) {
                     if !config.sanket.is_empty() {
                         for ns in &config.sanket {
@@ -2382,8 +2418,6 @@ apt-get() {
                 let args_c: Vec<CString> = exec_args.iter().map(|s| CString::new(s.as_str()).unwrap()).collect();
                 
                 let mut envs = config.paryavaran.clone();
-                envs.insert("PS1".to_string(), "\n\x1b[1m\x1b[32mvessel-sandbox ❯ \x1b[0m".to_string());
-                
                 if let Some(ref time_str) = config.kala {
                     envs.insert("TZ".to_string(), time_str.clone());
                 }
@@ -2523,7 +2557,7 @@ apt-get() {
                         let mut full_cmd = if is_alpine {
                             format!("apk add --no-cache {}", sthapana)
                         } else {
-                            format!("apt-get update && apt-get install -y {}", sthapana)
+                            format!("apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y {}", sthapana)
                         };
 
                         if let Ok(mut install_child) = Command::new("/bin/sh")
@@ -2640,6 +2674,95 @@ apt-get() {
             }
         }
     }
+
+    Ok(())
+}
+
+
+===== ./nova-cli/src/termux.rs =====
+use std::process::Command;
+use std::env;
+use crate::PatraConfig;
+
+/// Detects if the CLI is running inside a Termux environment on Android
+pub fn is_termux() -> bool {
+    env::var("PREFIX").map_or(false, |p| p.contains("com.termux"))
+}
+
+/// Dynamically relocates the rootfs storage to the Termux Prefix to bypass Android Read-Only limitations
+pub fn get_base_dir() -> String {
+    if is_termux() {
+        format!("{}/var/lib/vessel", env::var("PREFIX").unwrap_or_default())
+    } else {
+        "/var/lib/vessel".to_string()
+    }
+}
+
+/// Dynamically locates a writeable temporary directory
+pub fn get_tmp_dir() -> String {
+    if is_termux() {
+        env::var("TMPDIR").unwrap_or_else(|_| "/data/data/com.termux/files/usr/tmp".to_string())
+    } else {
+        "/tmp".to_string()
+    }
+}
+
+/// Routes sandbox execution through PRoot when root-level namespaces are unavailable
+pub(crate) async fn run_direct(config: PatraConfig) -> Result<(), Box<dyn std::error::Error>> {
+    println!("\x1b[1m\x1b[33m[vessel-termux]\x1b[0m Termux environment detected. Adapting to unprivileged PRoot execution...");
+    
+    // Ensure PRoot is installed inside Termux
+    if Command::new("proot").arg("--help").output().is_err() {
+        println!("\x1b[1m\x1b[31m[vessel-termux] Error: Core package 'proot' is not installed.\x1b[0m");
+        println!("Please install it by running: \x1b[1mpkg install proot\x1b[0m\n");
+        std::process::exit(1);
+    }
+
+    // Warn the user about kernel features that must be bypassed in user-space
+    if config.shakti != 1.0 || config.smriti != 512 * 1024 * 1024 {
+        println!("\x1b[33m  ⚠ Kernel Limits (Smriti/Shakti) are unavailable in unprivileged user-space. Ignored.\x1b[0m");
+    }
+    if !config.dwar.is_empty() {
+        println!("\x1b[33m  ⚠ Network bridging (Dwar) is unavailable. Falling back to host networking.\x1b[0m");
+    }
+    
+    println!("\x1b[1m\x1b[32m✔ Termux adapter ready. Booting Virtual Environment...\x1b[0m\n");
+
+    let mut proot_cmd = Command::new("proot");
+    
+    // Build the PRoot Virtualization Chain
+    proot_cmd.arg("--link2symlink")
+             .arg("-0")               // Fake root context (UID/GID 0)
+             .arg("-r").arg(&config.mool)
+             .arg("-b").arg("/dev")
+             .arg("-b").arg("/proc")
+             .arg("-w").arg("/");
+
+    // Add Android's system resolver if DNS is needed
+    if std::path::Path::new("/system/etc/resolv.conf").exists() {
+        proot_cmd.arg("-b").arg("/system/etc/resolv.conf:/etc/resolv.conf");
+    }
+
+    // Resolve any custom 'Sanchay' (mount) definitions mapped by the user
+    for mount_spec in &config.sanchay {
+        if let Some((host_path, guest_path)) = mount_spec.split_once(':') {
+            proot_cmd.arg("-b").arg(format!("{}:{}", host_path, guest_path));
+        }
+    }
+    
+    // Inject the 'Paryavaran' (Environment variables)
+    for (k, v) in &config.paryavaran {
+        proot_cmd.env(k, v);
+    }
+
+    // Hand-off execution to the requested task
+    proot_cmd.arg(&config.karya[0]);
+    if config.karya.len() > 1 {
+        proot_cmd.args(&config.karya[1..]);
+    }
+
+    let mut child = proot_cmd.spawn()?;
+    child.wait()?;
 
     Ok(())
 }
@@ -2824,7 +2947,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
 tokio = { version = "1.0", features = ["full"] }
-blake3 = "1.3"
+blake3 = "1.5"
 
 
 ===== ./sdk/js/src/client.ts =====

@@ -13,3 +13,6 @@ zstd = "0.13"
 
 # Explicitly configure all required nix features (fs, sched, mount, user, term)
 nix = { version = "0.31", features = ["sched", "mount", "user", "fs", "term"] }
+serde_yaml = "0.9.34"
+rand = "0.10.2"
+async-trait = "0.1.89"
