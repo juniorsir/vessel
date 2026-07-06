@@ -1,128 +1,83 @@
-use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
-use thiserror::Error;
+use std::process::Command;
+use rand::Rng;
+use std::io::{self, Error, ErrorKind};
 
-#[derive(Error, Debug)]
-pub enum NetworkError {
-    #[error("Failed to provision interface: {0}")]
-    InterfaceProvisionFailed(String),
-    #[error("eBPF map injection failed: {0}")]
-    EbpfInjectionFailed(String),
-    #[error("Policy compilation syntax error: {0}")]
-    PolicyInvalid(String),
-    #[error("DNS registry update failed: {0}")]
-    DnsUpdateFailed(String),
+/// Generates a valid IEEE 802 Locally Administered Unicast MAC address.
+pub fn generate_random_mac() -> String {
+    let mut rng = rand::thread_rng();
+    let first_byte: u8 = match rng.gen_range(0..4) {
+        0 => 0x02,
+        1 => 0x06,
+        2 => 0x0A,
+        _ => 0x0E,
+    };
+    
+    format!(
+        "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+        first_byte,
+        rng.gen::<u8>(),
+        rng.gen::<u8>(),
+        rng.gen::<u8>(),
+        rng.gen::<u8>(),
+        rng.gen::<u8>()
+    )
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum NetworkMode {
-    Bridge,
-    Host,
-    Overlay,
-    Mesh,
-}
+/// Applies the MAC address to the specified interface inside the namespace.
+pub fn apply_chhadm(interface: &str, custom_mac: Option<&str>) -> io::Result<String> {
+    let mac = match custom_mac {
+        Some("random") | None => generate_random_mac(),
+        Some(val) => val.to_string(),
+    };
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct NetworkConfig {
-    pub mode: NetworkMode,
-    pub ipv4_subnet: String,
-    pub ipv6_subnet: Option<String>,
-    pub enable_wireguard_vpn: bool,
-    pub enable_mtls: bool,
-}
+    let status = Command::new("ip")
+        .args(&["link", "set", "dev", interface, "address", &mac])
+        .status()?;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ServiceRecord {
-    pub service_name: String,
-    pub container_id: String,
-    pub cluster_ip: IpAddr,
-    pub target_port: u16,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum TrafficDirection {
-    Ingress,
-    Egress,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum PolicyAction {
-    Allow,
-    Deny,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct NetworkPolicyRule {
-    pub direction: TrafficDirection,
-    pub target_cidr: String,
-    pub port: u16,
-    pub action: PolicyAction,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct NetworkPolicy {
-    pub workload_id: String,
-    pub rules: Vec<NetworkPolicyRule>,
-}
-
-pub struct NetworkController {
-    config: NetworkConfig,
-}
-
-impl NetworkController {
-    pub fn new(config: NetworkConfig) -> Self {
-        Self { config }
+    if !status.success() {
+        return Err(Error::new(ErrorKind::Other, "Failed to set MAC address"));
     }
 
-    /// Provisions virtual network links for a sandbox target.
-    pub async fn provision_sandbox_network(&self, workload_id: &str) -> Result<IpAddr, NetworkError> {
-        println!("[Network Controller] Allocating addresses in subnet {}", self.config.ipv4_subnet);
-        
-        match self.config.mode {
-            NetworkMode::Bridge => {
-                println!("[Bridge Driver] Spawning veth pairs for sandbox: {}", workload_id);
-            }
-            NetworkMode::Host => {
-                println!("[Host Driver] Direct binding to physical interfaces enabled for sandbox: {}", workload_id);
-            }
-            NetworkMode::Overlay => {
-                println!("[Overlay Driver] Initializing dynamic VXLAN tunnel endpoints...");
-            }
-            NetworkMode::Mesh => {
-                println!("[Mesh Driver] Hooking socket layers with eBPF sockmaps...");
-            }
+    Ok(mac)
+}
+
+/// Configures iptables rules inside the container namespace to redirect TCP/DNS to Tor.
+pub fn apply_gupt(trans_port: u16, dns_port: u16) -> io::Result<()> {
+    let rules = vec![
+        vec!["-t", "nat", "-F"],
+        vec![
+            "-t", "nat", "-A", "OUTPUT", "-p", "udp", "--dport", "53",
+            "-j", "REDIRECT", "--to-ports", &dns_port.to_string(),
+        ],
+        vec![
+            "-t", "nat", "-A", "OUTPUT", "-p", "tcp", "--dport", "53",
+            "-j", "REDIRECT", "--to-ports", &dns_port.to_string(),
+        ],
+        vec!["-t", "nat", "-A", "OUTPUT", "-o", "lo", "-j", "RETURN"],
+        vec![
+            "-t", "nat", "-A", "OUTPUT", "-p", "tcp", "--syn",
+            "-j", "REDIRECT", "--to-ports", &trans_port.to_string(),
+        ],
+    ];
+
+    for rule in rules {
+        let status = Command::new("iptables").args(&rule).status()?;
+        if !status.success() {
+            return Err(Error::new(
+                ErrorKind::Other,
+                format!("Failed to apply iptables rule: {:?}", rule),
+            ));
         }
-
-        if self.config.enable_wireguard_vpn {
-            println!("[VPN Engine] Wrapping interface boundaries with Wireguard mTLS tunnel.");
-        }
-
-        // Return a simulated allocated IP address
-        Ok("10.0.10.15".parse().unwrap())
     }
 
-    /// Compiles high-level policy definitions to binary syscall filters.
-    pub async fn enforce_network_policy(&self, policy: NetworkPolicy) -> Result<(), NetworkError> {
-        println!("[Policy Engine] Compiling {} rules to kernel structures for {}", policy.rules.len(), policy.workload_id);
-        
-        for rule in policy.rules {
-            println!(
-                "  - Enforcing {:?} rule to target: {} on port: {} Action: {:?}",
-                rule.direction, rule.target_cidr, rule.port, rule.action
-            );
-            // In a production environment, this step parses target CIDRs and ports,
-            // formats binary network policy rules, and updates kernel eBPF map values.
-        }
+    Ok(())
+}
 
-        Ok(())
+/// Flushes the NAT table rules inside the namespace during teardown.
+pub fn cleanup_gupt() -> io::Result<()> {
+    let status = Command::new("iptables").args(&["-t", "nat", "-F"]).status()?;
+    if !status.success() {
+        return Err(Error::new(ErrorKind::Other, "Failed to flush Gupt NAT rules"));
     }
-
-    /// Registers a new node address in the local DNS resolution database.
-    pub async fn register_service_discovery(&self, record: ServiceRecord) -> Result<(), NetworkError> {
-        println!(
-            "[DNS Discovery] Map dynamic route: {}.nova.local -> {} (Port: {})",
-            record.service_name, record.cluster_ip, record.target_port
-        );
-        Ok(())
-    }
+    Ok(())
 }

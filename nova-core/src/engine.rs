@@ -35,6 +35,7 @@ impl Engine {
             }
         }
 
+        println!("🚀 [Engine Debug] Loaded Gupt value: {:?}", self.patra.gupt);
         // 🧅 Apply Gupt (Tor Anonymity Routing)
         if let Some(ref gupt_mode) = self.patra.gupt {
             if let Err(e) = apply_gupt(&host_veth, gupt_mode) {
@@ -61,7 +62,7 @@ impl Engine {
 
         if self.patra.gupt.is_some() {
             println!("[Gupt] 🧹 Dismantling Tor transparent firewall rules...");
-            cleanup_gupt(&host_veth);
+            let _ = cleanup_gupt(&host_veth);
         }
 
         let _ = Command::new("ip").args(&["link", "delete", &host_veth]).output();
