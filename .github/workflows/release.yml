@@ -1,0 +1,69 @@
+name: 🛡️ Vessel Enterprise CI/CD & Automated Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers automatically when you push a Git tag like v1.0.0 or v1.0.1
+  workflow_dispatch: # Allows you to manually click "Run workflow" in GitHub Actions tab!
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    name: Build & Publish Vessel Linux Binary
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # REQUIRED to create GitHub Releases and upload binary assets!
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup Rust Stable Toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: 🔨 Build Release Binary
+      run: |
+        cargo build --release --verbose --bin nova-cli
+        
+    - name: 📦 Package Binary & Generate SHA256 Checksum
+      run: |
+        mkdir -p dist
+        cp target/release/nova-cli dist/vessel-linux-amd64
+        chmod +x dist/vessel-linux-amd64
+        cd dist && sha256sum vessel-linux-amd64 > vessel-linux-amd64.sha256
+
+    - name: 🚀 Publish GitHub Release & Upload Asset
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: 🛡️ Vessel Cyber-Vault Runtime ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        body: |
+          ### 🏛️ Vessel / Nova Linux Anonymity & Hardened Sandbox Engine
+          **Lead Systems Architect:** `juniorsir`
+          **Version:** `${{ github.ref_name }}` | **License:** MIT / Apache-2.0 Dual Open-Source
+          
+          #### ✨ Key Subsystems & Defenses in this Release:
+          * 🎭 **Chhadm:** Automated IEEE 802 MAC Address Randomization.
+          * 🧅 **Gupt:** Netfilter PREROUTING Transparent Tor Onion Tunneling.
+          * 🏝️ **Ekant:** 100% Air-Gapped Solitude Isolation Mode.
+          * 🔥 **Bhasma:** Anti-Forensic RAM Incineration (`MADV_DONTDUMP` / `WIPEONFORK`).
+          * 🔮 **Maya & Kavach:** Seccomp-BPF Syscall Honeypot Trapping.
+          * 🛡️ **Margdarshak:** Intelligent Real-Time Security & Privacy Advisor.
+          * 📦 **Sthapana:** Intelligent Docker-style Rootfs Pulling & Setup.
+          * ⚡ **Global CLI:** 1-word instant commands (`vessel tor`, `vessel test`, `vessel clean`).
+          
+          #### 📥 Instant Installation Command (No Rust Compiler Needed!):
+          ```bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/vessel-linux-amd64
+          chmod +x vessel-linux-amd64
+          sudo mv vessel-linux-amd64 /usr/local/bin/vessel
+          ```
+        files: |
+          dist/vessel-linux-amd64
+          dist/vessel-linux-amd64.sha256
