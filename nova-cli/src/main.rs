@@ -640,6 +640,7 @@ fn print_comprehensive_help() {
 
 // 🛡️ Margdarshak (मार्गदर्शक) - Intelligent Security & Warning Advisor System
 fn run_margdarshak_advisor(config: &PatraConfig) {
+    if std::env::args().any(|arg| arg == "-q" || arg == "--quiet" || arg == "--silent" || arg == "shant") { return; }
     let mut warnings = Vec::new();
     let mut recommendations = Vec::new();
 
@@ -1180,7 +1181,7 @@ Suraksha: ephemeral              # Enabled writeable copy-on-write overlay
         return Ok(());
     }
 
-    if args.len() == 1 || (args.len() >= 2 && (args[1] == "direct" || args[1] == "local" || args[1] == "run" || args[1] == "tor" || args[1] == "test")) {
+    if args.len() == 1 || (args.len() >= 2 && (args[1] == "direct" || args[1] == "local" || args[1] == "run" || args[1] == "tor" || args[1] == "test" || args[1] == "-q" || args[1] == "--quiet" || args[1] == "--silent" || args[1] == "shant")) {
         
         if !nix::unistd::geteuid().is_root() {
             println!("\x1b[1m\x1b[31m[vessel] Error: Root privileges required to construct sandbox namespaces.\x1b[0m");
@@ -1222,7 +1223,7 @@ Suraksha: ephemeral              # Enabled writeable copy-on-write overlay
             }
         };
 
-                println!("  \x1b[1m\x1b[36mvessel ❯ Card Loaded: Patra (पत्र)\x1b[0m");
+            println!("  \x1b[1m\x1b[36mvessel ❯ Card Loaded: Patra (पत्र)\x1b[0m");
         run_margdarshak_advisor(&config);
 
         // 📦 Intelligent Rootfs Auto-Installer
@@ -1927,6 +1928,41 @@ apt-get() {
                             filter: filter.as_ptr() as *mut libc::sock_filter,
                         };
                         let _ = libc::prctl(libc::PR_SET_SECCOMP, libc::SECCOMP_MODE_FILTER, &program as *const libc::sock_fprog);
+                    }
+
+                    
+                    
+                    // 🔓 Sudo Unlocker & PAM Shadow Account Unlocker
+                    if config.sadasya.as_deref() != Some("root") {
+                        let _ = std::fs::create_dir_all("/etc/sudoers.d");
+                        let _ = std::fs::write("/etc/sudoers.d/vessel-nopasswd", "ALL ALL=(ALL) NOPASSWD: ALL\n");
+                        let _ = std::process::Command::new("chmod").args(["0440", "/etc/sudoers.d/vessel-nopasswd"]).status();
+                        
+                        // Ensure user \x27sir\x27 is registered in passwd, group, and shadow tables
+                        if let Ok(mut passwd) = std::fs::OpenOptions::new().append(true).open("/etc/passwd") {
+                            use std::io::Write;
+                            if !std::fs::read_to_string("/etc/passwd").unwrap_or_default().contains("sir:") {
+                                let _ = writeln!(passwd, "sir:x:1000:1000:Vessel User:/home/sir:/bin/bash");
+                            }
+                        }
+                        if let Ok(mut group) = std::fs::OpenOptions::new().append(true).open("/etc/group") {
+                            use std::io::Write;
+                            if !std::fs::read_to_string("/etc/group").unwrap_or_default().contains("sir:") {
+                                let _ = writeln!(group, "sir:x:1000:");
+                            }
+                        }
+                        // Unlock PAM account validation in /etc/shadow
+                        if let Ok(mut shadow) = std::fs::OpenOptions::new().append(true).open("/etc/shadow") {
+                            use std::io::Write;
+                            let shadow_str = std::fs::read_to_string("/etc/shadow").unwrap_or_default();
+                            if !shadow_str.contains("sir:") {
+                                let _ = writeln!(shadow, "sir::19000:0:99999:7:::");
+                            } else {
+                                let _ = std::process::Command::new("sed").args(["-i", "s/^sir:[!*]/sir:/g", "/etc/shadow"]).status();
+                            }
+                        }
+                        let _ = std::fs::create_dir_all("/home/sir");
+                        let _ = std::process::Command::new("chown").args(["-R", "1000:1000", "/home/sir"]).status();
                     }
 
                     if let Some(ref user_str) = config.sadasya {
