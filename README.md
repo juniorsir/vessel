@@ -37,6 +37,8 @@ Vessel is distributed via NPM but downloads native, highly optimized Rust binari
 
 ```bash
 npm install -g @juniorsir/vessel
+# OR run without installing:
+npx @juniorsir/vessel tor
 ```
 *Note: On Linux, ensure you have basic build tools available. On Termux, ensure `proot` is installed (`pkg install proot`).*
 
@@ -56,6 +58,11 @@ npm install -g @juniorsir/vessel
    ```bash
    vessel suchi
    ```
+4. **Launch**:
+   ```bash
+   sudo vessel
+   # OR Hide warnings
+   sudo vessel -q
 
 ---
 
@@ -157,6 +164,79 @@ Paryavaran:
 
 ---
 
+### 🟢 Node.js / TypeScript SDK (`@juniorsir/vessel-sdk`)
+```typescript
+import { Vessel } from '@juniorsir/vessel-sdk';
+
+// Programmatically spawn an isolated Tor anonymity sandbox
+const vault = new Vessel({
+  sangjna: 'ai-processor',
+  smriti: '512MB',
+  chhadm: 'random',   // 🎭 Randomize MAC address
+  gupt: 'tor',        // 🧅 Transparent Tor onion routing
+  ekant: false,       // 🏝️ Set true for 100% Air-Gapped offline mode
+  bhasma: true        // 🔥 Shred RAM memory pages on exit
+});
+
+// Execute untrusted scripts synchronously inside the vault
+const result = vault.runSync(false); // pass true for silent '-q' mode
+console.log(result.stdout);
+```
+
+### 🐍 Python SDK (`vessel-py`)
+```python
+from vessel_sdk import Vessel
+
+# Instantiate a secure cybersecurity vault
+vault = Vessel(
+    mool="/",
+    karya="/bin/bash -c 'echo Hello from isolated rootfs'",
+    gupt="tor",          # 🧅 Tor transparent proxying
+    bhasma=True,         # 🔥 Anti-forensic RAM incineration
+    kavach="strict"      # 🛡️ Seccomp-BPF syscall armor
+)
+
+# Launch sandbox (set quiet=True to suppress boot logs)
+proc = vault.run(quiet=False)
+print(proc.stdout)
+```
+
+### 🔵 Go SDK (`vessel-client`)
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/juniorsir/vessel/sdk/go/nova"
+)
+
+func main() {
+    client := nova.NewClient(nova.Options{
+        Sangjna: "go-orchestrator",
+        Smriti:  "1GB",
+        Gupt:    "tor",
+        Bhasma:  true,
+    })
+    
+    output, _ := client.Run(false)
+    fmt.Println(string(output))
+}
+```
+
+### 🦀 Rust SDK (`vessel-sdk`)
+```rust
+use vessel_sdk::{VesselClient, VesselOptions};
+
+let opts = VesselOptions {
+    sangjna: "rust-worker".into(),
+    gupt: Some("tor".into()),
+    bhasma: true,
+    ..Default::default()
+};
+
+let client = VesselClient::new(opts);
+let output = client.run(false).unwrap();
+```
 ## 🏗️ Architecture Under The Hood
 
 Vessel is composed of two distinct operational modes:
