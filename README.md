@@ -1,8 +1,3 @@
-Here is the complete `README.md` updated with a sleek, professional **Developer Card** near the bottom. 
-
-Copy and paste this block into your terminal to overwrite and update your `README.md`:
-
-```bash
 <div align="center">
 
 # 🚢 Vessel (NEXUS Engine)
